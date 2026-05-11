@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Privacy Policy — Data Gut Check</title>
+  <meta name="description" content="Privacy policy for Data Gut Check. Learn how we handle your data (spoiler: we don't — everything runs in your browser)."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .privacy-body { max-width: 680px; margin: 0 auto; padding: 48px 20px 64px; }
+    .privacy-body h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+    .privacy-body .lead { color: var(--text-2); font-size: 15px; margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .privacy-body h2 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; }
+    .privacy-body p, .privacy-body li { color: var(--text-2); font-size: 14px; line-height: 1.75; }
+    .privacy-body ul { padding-left: 20px; margin: 8px 0; }
+    .privacy-body li { margin-bottom: 4px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-3); margin: 20px 20px 0; }
+    .back-link:hover { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="container" style="height:56px;display:flex;align-items:center">
+      <a href="index.html" class="logo" style="text-decoration:none">
+        <svg class="logo-icon" viewBox="0 0 28 28" fill="none" width="28" height="28">
+          <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+          <circle cx="14" cy="14" r="2.5" fill="#00d4ff"/>
+        </svg>
+        <span class="logo-text">Data Gut Check</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="privacy-body">
+    <h1>Privacy Policy</h1>
+    <p class="lead">Last updated: May 2025 · Data Gut Check is a client-side tool. We have no servers, no accounts, and no databases. This policy explains what little data handling occurs.</p>
+
+    <h2>1. Data We Do Not Collect</h2>
+    <p>We do <strong>not</strong> collect, store, transmit, or process:</p>
+    <ul>
+      <li>Your CSV or TSV files — they are parsed entirely in your browser's memory</li>
+      <li>Your raw data — no row-level data leaves your device</li>
+      <li>Personal identifiers — no name, email, or IP address is collected</li>
+      <li>Behavioral analytics — no tracking pixels, session recording, or user profiling</li>
+    </ul>
+
+    <h2>2. Your Gemini API Key</h2>
+    <p>Your Gemini API key is stored exclusively in your browser's <code>sessionStorage</code>. It is:</p>
+    <ul>
+      <li>Automatically deleted when you close the browser tab</li>
+      <li>Never sent to any Data Gut Check server (there is none)</li>
+      <li>Transmitted only to <code>generativelanguage.googleapis.com</code> — Google's API endpoint — when you explicitly run a diagnosis</li>
+    </ul>
+    <p>Review <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a> for how they handle API requests.</p>
+
+    <h2>3. What Is Sent to Google Gemini</h2>
+    <p>When you run an AI diagnosis, we send <strong>only statistical metadata</strong> derived from your file — approximately 300–500 tokens of aggregate statistics (column names, data types, null percentages, numeric distributions, etc.). No individual rows of data are transmitted.</p>
+
+    <h2>4. Google AdSense</h2>
+    <p>This site displays ads served by Google AdSense. Google may use cookies and similar technologies to serve personalized ads based on your browsing history. For more information or to opt out:</p>
+    <ul>
+      <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a></li>
+      <li><a href="https://adssettings.google.com" target="_blank" rel="noopener">Google Ad Settings</a></li>
+    </ul>
+    <p>If you are located in the European Economic Area (EEA), Google AdSense uses a consent management approach compliant with the IAB Europe Transparency and Consent Framework (TCF v2.2).</p>
+
+    <h2>5. Cookies</h2>
+    <p>Data Gut Check itself sets no first-party cookies. Third-party cookies may be set by Google AdSense as described above.</p>
+
+    <h2>6. Children's Privacy</h2>
+    <p>This service is not directed at children under 13. We do not knowingly collect any information from children.</p>
+
+    <h2>7. Changes to This Policy</h2>
+    <p>We may update this policy to reflect changes in the tool or legal requirements. Changes will be posted on this page with an updated date.</p>
+
+    <h2>8. Contact</h2>
+    <p>Questions about this policy? Open an issue on our GitHub repository.</p>
+  </div>
+
+  <footer class="app-footer">
+    <div class="container footer-inner">
+      <span class="footer-copy">© 2025 Data Gut Check · <a href="privacy.html">Privacy Policy</a></span>
+      <span class="footer-tagline">Your data never leaves your browser.</span>
+    </div>
+  </footer>
+</body>
+</html>

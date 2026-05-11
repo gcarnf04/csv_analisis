@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Gut Check — Is your data lying to you?</title>
+  <meta name="description" content="Upload a CSV and get an AI-powered data quality diagnostic in seconds. No server, no data leaks — everything runs in your browser." />
+  <meta property="og:title" content="Data Gut Check" />
+  <meta property="og:description" content="Upload your CSV. Know if your data is lying to you." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0d14'/><text x='5' y='24' font-size='20' fill='%2300d4ff'>⬡</text></svg>" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- CDN Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════ HEADER ═══ -->
+  <header class="app-header">
+    <div class="container">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+          <polygon points="14,7 21,11 21,17 14,21 7,17 7,11" fill="none" stroke="#00d4ff" stroke-width="1" opacity="0.5"/>
+          <circle cx="14" cy="14" r="2.5" fill="#00d4ff"/>
+        </svg>
+        <span class="logo-text">Data Gut Check</span>
+        <span class="logo-badge">beta</span>
+      </div>
+
+      <div class="api-key-area" id="apiKeyArea">
+        <div class="api-key-status" id="apiKeyStatus">
+          <span class="status-dot" id="statusDot"></span>
+          <span class="status-label" id="statusLabel">No API key</span>
+        </div>
+        <button class="btn-ghost btn-sm" id="btnToggleApiKey">Set key</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- API Key Modal -->
+  <div class="modal-backdrop" id="modalBackdrop" hidden>
+    <div class="modal" id="apiKeyModal">
+      <button class="modal-close" id="btnModalClose" aria-label="Close">✕</button>
+      <h2 class="modal-title">Gemini API Key</h2>
+      <p class="modal-desc">Your key is stored in <code>sessionStorage</code> only — never sent to any server. It leaves your browser solely to call <code>generativelanguage.googleapis.com</code>.</p>
+      <div class="input-group">
+        <input type="password" id="apiKeyInput" class="input-field" placeholder="AIzaSy…" autocomplete="off" spellcheck="false"/>
+        <button class="btn-icon" id="btnToggleVisible" title="Toggle visibility">
+          <svg id="iconEye" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
+            <path d="M1 10s3-6 9-6 9 6 9 6-3 6-9 6-9-6-9-6Z" stroke="#94a3b8" stroke-width="1.5"/>
+            <circle cx="10" cy="10" r="2.5" stroke="#94a3b8" stroke-width="1.5"/>
+          </svg>
+        </button>
+      </div>
+      <p class="modal-hint"><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Get a free API key →</a></p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btnClearKey">Clear</button>
+        <button class="btn-primary" id="btnSaveKey">Save & activate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ MAIN ═══ -->
+  <main class="app-main">
+    <div class="container">
+
+      <!-- ── STATE: HERO (visible when no file loaded) ──────────────── -->
+      <section class="hero-section" id="heroSection">
+        <div class="hero-eyebrow">AI-powered data quality diagnostic</div>
+        <h1 class="hero-title">Upload your CSV.<br/>Know if your data<br/><span class="text-accent">is lying to you.</span></h1>
+        <p class="hero-sub">Statistical analysis runs in your browser. Only ~500 tokens of metadata are sent to Claude. Your raw data stays local — always.</p>
+        <div class="hero-features">
+          <div class="feature-pill">
+            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M8 2v12M2 8h12" stroke="#00d4ff" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Null analysis
+          </div>
+          <div class="feature-pill">
+            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3 13L8 3l5 10H3Z" stroke="#00d4ff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            Outlier detection
+          </div>
+          <div class="feature-pill">
+            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="5" stroke="#00d4ff" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="#00d4ff" stroke-width="1.5" stroke-linecap="round"/></svg>
+            ML readiness score
+          </div>
+          <div class="feature-pill">
+            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M2 14l4-4 3 3 5-8" stroke="#00d4ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Correlation matrix
+          </div>
+        </div>
+      </section>
+
+      <!-- Ad Block 1: Top banner (visible hero state) -->
+      <div class="ad-container ad-banner" id="adBanner1" aria-label="Advertisement">
+        <!-- Google AdSense: Responsive display ad -->
+        <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
+        <div class="ad-placeholder">Advertisement</div>
+      </div>
+
+      <!-- ── DROP ZONE ──────────────────────────────────────────────── -->
+      <section class="upload-section" id="uploadSection">
+        <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Upload CSV file">
+          <div class="drop-zone-inner">
+            <div class="drop-icon">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
+                <path d="M24 32V16M16 24l8-8 8 8" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 36a8 8 0 0 1 0-16h2a12 12 0 0 1 23.6-2.4A8 8 0 1 1 40 36H8Z" stroke="#00d4ff" stroke-width="1.5" stroke-linejoin="round" opacity="0.5"/>
+              </svg>
+            </div>
+            <p class="drop-title">Drop your CSV here</p>
+            <p class="drop-sub">or <label for="fileInput" class="drop-link">browse files</label></p>
+            <p class="drop-hint">.csv · .tsv · max 50 MB recommended</p>
+          </div>
+          <input type="file" id="fileInput" accept=".csv,.tsv" hidden aria-hidden="true"/>
+        </div>
+      </section>
+
+      <!-- ── FILE INFO BAR ──────────────────────────────────────────── -->
+      <section class="file-info-bar" id="fileInfoBar" hidden>
+        <div class="file-meta">
+          <span class="file-icon">📄</span>
+          <span class="file-name" id="fileName">dataset.csv</span>
+          <span class="file-sep">·</span>
+          <span class="file-stat" id="fileStat">0 rows × 0 cols · 0 KB</span>
+        </div>
+        <button class="btn-ghost btn-sm btn-danger" id="btnRemoveFile">✕ Remove</button>
+      </section>
+
+      <!-- ── DATA PREVIEW TABLE ─────────────────────────────────────── -->
+      <section class="preview-section" id="previewSection" hidden>
+        <div class="section-header">
+          <h2 class="section-title">Data Preview <span class="section-badge">first 5 rows</span></h2>
+        </div>
+        <div class="table-wrapper">
+          <table class="preview-table" id="previewTable"></table>
+        </div>
+      </section>
+
+      <!-- ── ANALYSIS PANEL ─────────────────────────────────────────── -->
+      <section class="analysis-panel" id="analysisPanel" hidden>
+        <div class="section-header">
+          <h2 class="section-title">Column Diagnostics</h2>
+          <div class="problems-count" id="problemsCount"></div>
+        </div>
+        <div class="column-grid" id="columnGrid"></div>
+
+        <!-- Correlation matrix -->
+        <div class="correlation-section" id="correlationSection" hidden>
+          <h3 class="section-subtitle">Correlation Matrix <span class="section-badge">numeric columns</span></h3>
+          <div class="correlation-grid" id="correlationGrid"></div>
+        </div>
+
+        <!-- CTA to run AI analysis -->
+        <div class="cta-bar">
+          <button class="btn-primary btn-lg btn-glow" id="btnAnalyze" disabled>
+            <svg viewBox="0 0 20 20" fill="none" width="18" height="18">
+              <path d="M10 2a8 8 0 1 0 0 16A8 8 0 0 0 10 2Z" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Run AI Diagnosis
+          </button>
+          <p class="cta-hint" id="ctaHint">Set your API key to enable AI diagnosis</p>
+        </div>
+      </section>
+
+      <!-- Ad Block 2: Mid-page (visible during analysis / loading) -->
+      <div class="ad-container ad-mid" id="adMid" aria-label="Advertisement" hidden>
+        <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
+        <div class="ad-placeholder">Advertisement</div>
+      </div>
+
+      <!-- ── LOADING STATE ───────────────────────────────────────────── -->
+      <section class="loading-section" id="loadingSection" hidden>
+        <div class="loading-card">
+          <div class="loading-orb"></div>
+          <div class="loading-text">
+            <p class="loading-status" id="loadingStatus">Initializing analysis…</p>
+            <div class="loading-bar-track"><div class="loading-bar-fill" id="loadingBarFill"></div></div>
+          </div>
+          <button class="btn-ghost btn-sm" id="btnCancelAnalysis">Cancel</button>
+        </div>
+      </section>
+
+      <!-- ── RESULTS SECTION ─────────────────────────────────────────── -->
+      <section class="results-section" id="resultsSection" hidden>
+
+        <!-- Score gauge -->
+        <div class="score-area">
+          <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" id="gaugeSvg">
+              <!-- Track -->
+              <path d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="#1e2a3a" stroke-width="16" stroke-linecap="round"/>
+              <!-- Fill -->
+              <path id="gaugeFill" d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="#00d4ff" stroke-width="16" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+            </svg>
+            <div class="gauge-center">
+              <span class="gauge-score" id="gaugeScore">—</span>
+              <span class="gauge-label">Quality Score</span>
+            </div>
+          </div>
+          <div class="score-verdict" id="scoreVerdict"></div>
+        </div>
+
+        <!-- Streaming diagnosis -->
+        <div class="diagnosis-card" id="diagnosisCard">
+          <div class="diagnosis-header">
+            <h2 class="section-title">AI Diagnosis</h2>
+            <div class="diagnosis-actions">
+              <button class="btn-ghost btn-sm" id="btnCopyReport">
+                <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 11V3a1 1 0 0 1 1-1h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                Copy Markdown
+              </button>
+              <button class="btn-secondary btn-sm" id="btnNewSession">
+                <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3 8a5 5 0 1 0 1-2.96" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M1 4l3 1-1 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                New Session
+              </button>
+            </div>
+          </div>
+          <div class="diagnosis-body" id="diagnosisBody"></div>
+        </div>
+
+        <!-- Ad Block 3: After results (long reading session) -->
+        <div class="ad-container ad-results" id="adResults" aria-label="Advertisement">
+          <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
+          <div class="ad-placeholder">Advertisement</div>
+        </div>
+
+      </section>
+
+    </div><!-- /container -->
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════ FOOTER ═══ -->
+  <footer class="app-footer">
+    <div class="container footer-inner">
+      <span class="footer-copy">© 2025 Data Gut Check · <a href="privacy.html">Privacy Policy</a></span>
+      <span class="footer-tagline">Your data never leaves your browser.</span>
+    </div>
+  </footer>
+
+  <!-- Interstitial Ad -->
+  <div class="interstitial-backdrop" id="interstitialAd" hidden>
+    <div class="interstitial-content">
+      <div class="interstitial-header">
+        <span>Advertisement</span>
+        <span class="interstitial-countdown" id="adCountdown">5</span>
+      </div>
+      <div class="interstitial-body">
+        <!-- Contenedor del anuncio (AdSense) -->
+        <div class="ad-placeholder" style="width: 100%; height: 300px;">Full Screen Ad Unit</div>
+      </div>
+      <button class="btn-ghost" id="btnSkipAd" disabled>Skip Ad</button>
+    </div>
+  </div>
+
+  <!-- JS Modules -->
+  <script src="js/analyzer.js"></script>
+  <script src="js/visualizer.js"></script>
+  <script src="js/gemini-api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
