@@ -118,7 +118,7 @@ const loginPinInputs = [...document.querySelectorAll('#loginModal .pin-input')];
 
 window.closeSetupModal = () => hide(DOM.setupModal);
 window.closeLoginModal = () => hide(DOM.loginModal);
-function openSetupModal() { show(DOM.setupModal); DOM.modalApiKeyInput.value = ''; DOM.modalError.textContent = ''; modalPinInputs.forEach(p=>p.value=''); setTimeout(()=>DOM.modalApiKeyInput.focus(), 50); }
+function openSetupModal() { show(DOM.setupModal); DOM.modalApiKeyInput.value = ''; DOM.modalError.textContent = ''; modalPinInputs.forEach(p=>p.value=''); $('btnClearKey').style.display = Vault.hasStoredKey() ? 'block' : 'none'; setTimeout(()=>DOM.modalApiKeyInput.focus(), 50); }
 function openLoginModal() { show(DOM.loginModal); DOM.loginError.textContent = ''; loginPinInputs.forEach(p=>p.value=''); setTimeout(()=>loginPinInputs[0]?.focus(), 50); }
 
 DOM.btnToggleApiKey.addEventListener('click', () => {
@@ -137,6 +137,14 @@ DOM.btnSaveKey.addEventListener('click', () => {
   if (pin.length !== 4) { DOM.modalError.textContent = 'Enter 4-digit PIN'; return; }
   Vault.saveKey(key, pin);
   State.apiKey = key;
+  closeSetupModal();
+  updateApiKeyUI();
+});
+
+$('btnClearKey')?.addEventListener('click', () => {
+  if (!confirm('Are you sure you want to delete your saved API Key? You will need to enter it again.')) return;
+  Vault.clearKey();
+  State.apiKey = null;
   closeSetupModal();
   updateApiKeyUI();
 });
