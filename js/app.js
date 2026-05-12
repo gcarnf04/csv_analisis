@@ -15,12 +15,14 @@ const DOM = {
   statusLabel:     $('statusLabel'),
   btnToggleApiKey: $('btnToggleApiKey'),
   // Modal
-  modalBackdrop:   $('modalBackdrop'),
-  apiKeyInput:     $('apiKeyInput'),
-  btnToggleVisible:$('btnToggleVisible'),
+  setupModal:      $('setupModal'),
+  loginModal:      $('loginModal'),
+  modalApiKeyInput:$('modalApiKeyInput'),
+  btnToggleApiKeyVis:$('btnToggleApiKeyVis'),
   btnSaveKey:      $('btnSaveKey'),
-  btnClearKey:     $('btnClearKey'),
-  btnModalClose:   $('btnModalClose'),
+  btnUnlock:       $('btnUnlock'),
+  modalError:      $('modalError'),
+  loginError:      $('loginError'),
   // Upload
   dropZone:        $('dropZone'),
   fileInput:       $('fileInput'),
@@ -62,7 +64,7 @@ const DOM = {
 
 /* ── Application state ───────────────────────────────────── */
 const State = {
-  apiKey:   sessionStorage.getItem('dgc_api_key') || '',
+  apiKey:   '',
   parsedData:   null,
   parsedFields: null,
   analysis:     null,
@@ -75,17 +77,29 @@ function show(el) { if (el) el.hidden = false; }
 function hide(el) { if (el) el.hidden = true; }
 
 function updateApiKeyUI() {
-  const valid = GeminiAPI.validateKeyFormat(State.apiKey);
-  DOM.statusDot.className   = 'status-dot' + (valid ? ' active' : '');
-  DOM.statusLabel.textContent = valid ? 'API key active' : 'No API key';
-  DOM.btnToggleApiKey.textContent = valid ? 'Change key' : 'Set key';
-
-  // Enable analyse button only if key + analysis ready
-  const canAnalyze = valid && State.analysis;
-  DOM.btnAnalyze.disabled = !canAnalyze;
-  DOM.ctaHint.textContent = valid
-    ? 'Your key is stored in sessionStorage — never sent to our servers.'
-    : 'Set your Gemini API key to enable AI diagnosis.';
+  if (Vault.isUnlocked()) {
+    State.apiKey = Vault.getUnlockedKey();
+    DOM.statusDot.className = 'status-dot active';
+    DOM.statusLabel.textContent = 'API Key loaded';
+    DOM.btnToggleApiKey.textContent = 'Change key';
+    const canAnalyze = !!State.analysis;
+    DOM.btnAnalyze.disabled = !canAnalyze;
+    DOM.ctaHint.textContent = 'Your key is unlocked for this session.';
+  } else if (Vault.hasStoredKey()) {
+    State.apiKey = '';
+    DOM.statusDot.className = 'status-dot';
+    DOM.statusLabel.textContent = 'Key saved — enter PIN to activate';
+    DOM.btnToggleApiKey.textContent = 'Unlock';
+    DOM.btnAnalyze.disabled = true;
+    DOM.ctaHint.textContent = 'Unlock your key to enable AI diagnosis.';
+  } else {
+    State.apiKey = '';
+    DOM.statusDot.className = 'status-dot error';
+    DOM.statusLabel.textContent = 'No API key';
+    DOM.btnToggleApiKey.textContent = 'Set key';
+    DOM.btnAnalyze.disabled = true;
+    DOM.ctaHint.textContent = 'Set your Gemini API key to enable AI diagnosis.';
+  }
 }
 
 function updateTitle(state) {
@@ -99,37 +113,57 @@ function updateTitle(state) {
 }
 
 /* ── API Key modal ───────────────────────────────────────── */
-DOM.btnToggleApiKey.addEventListener('click', () => { show(DOM.modalBackdrop); DOM.apiKeyInput.focus(); });
-DOM.btnModalClose.addEventListener('click',   () => hide(DOM.modalBackdrop));
-DOM.modalBackdrop.addEventListener('click', e => { if (e.target === DOM.modalBackdrop) hide(DOM.modalBackdrop); });
+const modalPinInputs = [...document.querySelectorAll('#setupModal .pin-input')];
+const loginPinInputs = [...document.querySelectorAll('#loginModal .pin-input')];
 
-DOM.btnToggleVisible.addEventListener('click', () => {
-  DOM.apiKeyInput.type = DOM.apiKeyInput.type === 'password' ? 'text' : 'password';
+window.closeSetupModal = () => hide(DOM.setupModal);
+window.closeLoginModal = () => hide(DOM.loginModal);
+function openSetupModal() { show(DOM.setupModal); DOM.modalApiKeyInput.value = ''; DOM.modalError.textContent = ''; modalPinInputs.forEach(p=>p.value=''); setTimeout(()=>DOM.modalApiKeyInput.focus(), 50); }
+function openLoginModal() { show(DOM.loginModal); DOM.loginError.textContent = ''; loginPinInputs.forEach(p=>p.value=''); setTimeout(()=>loginPinInputs[0]?.focus(), 50); }
+
+DOM.btnToggleApiKey.addEventListener('click', () => {
+  if (Vault.hasStoredKey() && !Vault.isUnlocked()) openLoginModal();
+  else openSetupModal();
+});
+
+DOM.btnToggleApiKeyVis?.addEventListener('click', () => {
+  DOM.modalApiKeyInput.type = DOM.modalApiKeyInput.type === 'password' ? 'text' : 'password';
 });
 
 DOM.btnSaveKey.addEventListener('click', () => {
-  const key = DOM.apiKeyInput.value.trim();
-  if (!GeminiAPI.validateKeyFormat(key)) {
-    DOM.apiKeyInput.style.borderColor = 'var(--red)';
-    setTimeout(() => DOM.apiKeyInput.style.borderColor = '', 1500);
-    return;
-  }
+  const key = DOM.modalApiKeyInput.value.trim();
+  const pin = modalPinInputs.map(p=>p.value).join('');
+  if (!key.startsWith('AIza') || key.length < 30) { DOM.modalError.textContent = 'Key must start with AIza (Gemini API Key)'; return; }
+  if (pin.length !== 4) { DOM.modalError.textContent = 'Enter 4-digit PIN'; return; }
+  Vault.saveKey(key, pin);
   State.apiKey = key;
-  sessionStorage.setItem('dgc_api_key', key);
+  closeSetupModal();
   updateApiKeyUI();
-  hide(DOM.modalBackdrop);
 });
 
-DOM.btnClearKey.addEventListener('click', () => {
-  State.apiKey = '';
-  sessionStorage.removeItem('dgc_api_key');
-  DOM.apiKeyInput.value = '';
+DOM.btnUnlock?.addEventListener('click', () => {
+  const pin = loginPinInputs.map(p=>p.value).join('');
+  if (pin.length !== 4) { DOM.loginError.textContent = 'Incomplete PIN'; return; }
+  const key = Vault.loadKey(pin);
+  if (!key) { DOM.loginError.textContent = 'Incorrect PIN'; return; }
+  State.apiKey = key;
+  closeLoginModal();
   updateApiKeyUI();
-  hide(DOM.modalBackdrop);
 });
 
-// Pre-fill input if key exists
-if (State.apiKey) DOM.apiKeyInput.value = State.apiKey;
+function initPinInputs(inputs) {
+  inputs.forEach((inp, i) => {
+    inp.addEventListener('input', () => {
+      inp.value = inp.value.replace(/\D/g, '').slice(-1);
+      if (inp.value && i < inputs.length - 1) inputs[i + 1].focus();
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && i > 0) inputs[i - 1].focus();
+    });
+  });
+}
+initPinInputs(modalPinInputs);
+initPinInputs(loginPinInputs);
 
 /* ── Drop zone ───────────────────────────────────────────── */
 DOM.dropZone.addEventListener('click', () => DOM.fileInput.click());

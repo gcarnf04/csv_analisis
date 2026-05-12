@@ -55,25 +55,54 @@
     </div>
   </header>
 
-  <!-- API Key Modal -->
-  <div class="modal-backdrop" id="modalBackdrop" hidden>
-    <div class="modal" id="apiKeyModal">
-      <button class="modal-close" id="btnModalClose" aria-label="Close">✕</button>
-      <h2 class="modal-title">Gemini API Key</h2>
-      <p class="modal-desc">Your key is stored in <code>sessionStorage</code> only — never sent to any server. It leaves your browser solely to call <code>generativelanguage.googleapis.com</code>.</p>
-      <div class="input-group">
-        <input type="password" id="apiKeyInput" class="input-field" placeholder="AIzaSy…" autocomplete="off" spellcheck="false"/>
-        <button class="btn-icon" id="btnToggleVisible" title="Toggle visibility">
-          <svg id="iconEye" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
-            <path d="M1 10s3-6 9-6 9 6 9 6-3 6-9 6-9-6-9-6Z" stroke="#94a3b8" stroke-width="1.5"/>
-            <circle cx="10" cy="10" r="2.5" stroke="#94a3b8" stroke-width="1.5"/>
-          </svg>
+  <!-- ══ MODAL: Setup API Key ═════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="setupModal" hidden>
+    <div class="modal">
+      <button class="modal-close" onclick="closeSetupModal()" aria-label="Close">✕</button>
+      <h2 class="modal-title">Set up your Gemini API Key</h2>
+      <p class="modal-desc">
+        You need a <strong>Gemini Key</strong> (starts with <code>AIza</code>).<br>
+        We'll encrypt it with your PIN. It only leaves your device to call Google.
+      </p>
+      <div class="input-group" style="margin-bottom:16px;">
+        <input type="password" id="modalApiKeyInput" class="input-field" placeholder="AIzaSy…" autocomplete="off"/>
+        <button class="btn-icon" id="btnToggleApiKeyVis" title="Show / hide">
+          <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><path d="M1 10s3-6 9-6 9 6 9 6-3 6-9 6-9-6-9-6Z" stroke="#94a3b8" stroke-width="1.5"/><circle cx="10" cy="10" r="2.5" stroke="#94a3b8" stroke-width="1.5"/></svg>
         </button>
       </div>
-      <p class="modal-hint"><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Get a free API key →</a></p>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="btnClearKey">Clear</button>
-        <button class="btn-primary" id="btnSaveKey">Save & activate</button>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label style="display:block; font-size:13px; color:var(--text-2); margin-bottom:8px;">Create a 4-digit PIN</label>
+        <div class="pin-inputs" style="display:flex; gap:10px; justify-content:center;">
+          <input class="pin-input" type="text" inputmode="numeric" maxlength="1" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-1);border:1px solid var(--border);border-radius:8px;color:white;" />
+          <input class="pin-input" type="text" inputmode="numeric" maxlength="1" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-1);border:1px solid var(--border);border-radius:8px;color:white;" />
+          <input class="pin-input" type="text" inputmode="numeric" maxlength="1" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-1);border:1px solid var(--border);border-radius:8px;color:white;" />
+          <input class="pin-input" type="text" inputmode="numeric" maxlength="1" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-1);border:1px solid var(--border);border-radius:8px;color:white;" />
+        </div>
+      </div>
+      <div id="modalError" style="color:#ef4444; font-size:13px; min-height:18px; text-align:center;"></div>
+      <div class="modal-actions" style="margin-top:20px; display:flex; gap:10px;">
+        <button class="btn-ghost" onclick="closeSetupModal()" style="flex:1;">Cancel</button>
+        <button class="btn-primary" id="btnSaveKey" style="flex:1;">Save & Activate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL: Login with PIN ════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="loginModal" hidden>
+    <div class="modal" style="text-align:center;">
+      <button class="modal-close" onclick="closeLoginModal()">✕</button>
+      <h2 class="modal-title">Enter your PIN</h2>
+      <p class="modal-desc">You have a saved key. Unlock it with your PIN.</p>
+      <div class="pin-inputs" style="display:flex; gap:10px; justify-content:center; margin:16px 0;">
+        <input class="pin-input" type="text" inputmode="numeric" maxlength="1" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-1);border:1px solid var(--border);border-radius:8px;color:white;" />
+        <input class="pin-input" type="text" inputmode="numeric" maxlength="1" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-1);border:1px solid var(--border);border-radius:8px;color:white;" />
+        <input class="pin-input" type="text" inputmode="numeric" maxlength="1" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-1);border:1px solid var(--border);border-radius:8px;color:white;" />
+        <input class="pin-input" type="text" inputmode="numeric" maxlength="1" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-1);border:1px solid var(--border);border-radius:8px;color:white;" />
+      </div>
+      <div id="loginError" style="color:#ef4444; font-size:13px; min-height:18px;"></div>
+      <div class="modal-actions" style="margin-top:20px; display:flex; gap:10px;">
+        <button class="btn-ghost" onclick="closeLoginModal()" style="flex:1;">Cancel</button>
+        <button class="btn-primary" id="btnUnlock" style="flex:1;">Unlock</button>
       </div>
     </div>
   </div>
@@ -271,6 +300,8 @@
   </div>
 
   <!-- JS Modules -->
+  <script src="js/crypto-js.min.js"></script>
+  <script src="js/vault.js"></script>
   <script src="js/analyzer.js"></script>
   <script src="js/visualizer.js"></script>
   <script src="js/gemini-api.js"></script>
