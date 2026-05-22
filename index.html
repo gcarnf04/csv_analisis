@@ -272,6 +272,29 @@
           <div class="ad-placeholder">Advertisement</div>
         </div>
 
+      <!-- ── EDUCATIONAL GUIDE ── -->
+      <section style="margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--border); margin-bottom: 32px;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;">
+          <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent);"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            Data Engineering & Cleanliness: Best Practices for Machine Learning Datasets
+          </div>
+          <div style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+            <div>
+              <h4 style="color: var(--accent); margin-bottom: 8px; font-size: 1.05rem; font-weight: 600;">The Significance of Clean Data</h4>
+              <p style="margin-bottom: 12px;">Data engineering is the foundation of machine learning. Raw datasets are rarely ready for model deployment. Predictive algorithms are highly sensitive to statistical noise, missing information, and skewness. Impeccable data diagnostics prevent garbage-in, garbage-out outcomes.</p>
+              <p>Our client-side statistical suite measures missing value ratios, identifies columns with extreme variances, and evaluates overall ML readiness locally inside your browser session.</p>
+            </div>
+            <div>
+              <h4 style="color: var(--accent); margin-bottom: 8px; font-size: 1.05rem; font-weight: 600;">Essential Diagnostic Checkpoints</h4>
+              <ul style="padding-left: 20px; margin-bottom: 12px; list-style-type: disc;">
+                <li style="margin-bottom: 6px;"><strong>Missing Value Thresholds:</strong> Columns with more than 30-40% missing entries generally should be removed rather than imputed to avoid synthetic bias.</li>
+                <li style="margin-bottom: 6px;"><strong>Outlier Mitigation:</strong> Extreme statistical anomalies skew regression weights. Detect them via standard deviation limits or IQR.</li>
+                <li style="margin-bottom: 6px;"><strong>Multicollinearity Check:</strong> Highly correlated variables confuse model interpretability. Always analyze feature correlation coefficients.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </section>
 
     </div><!-- /container -->
@@ -279,26 +302,11 @@
 
   <!-- ═══════════════════════════════════════════════════════ FOOTER ═══ -->
   <footer class="app-footer">
-    <div class="container footer-inner">
-      <span class="footer-copy">© 2025 Data Gut Check · <a href="privacy.html">Privacy Policy</a></span>
+    <div class="container footer-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <span class="footer-copy">© 2026 Data Gut Check · <a href="../inicio/privacy.html">Privacy Policy</a> · <a href="../inicio/terms.html">Terms of Use</a> · <a href="../inicio/about.html">About & Contact</a></span>
       <span class="footer-tagline">Your data never leaves your browser.</span>
     </div>
   </footer>
-
-  <!-- Interstitial Ad -->
-  <div class="interstitial-backdrop" id="interstitialAd" hidden>
-    <div class="interstitial-content">
-      <div class="interstitial-header">
-        <span>Advertisement</span>
-        <span class="interstitial-countdown" id="adCountdown">5</span>
-      </div>
-      <div class="interstitial-body">
-        <!-- Ad container (AdSense) -->
-        <div class="ad-placeholder" style="width: 100%; height: 300px;">Full Screen Ad Unit</div>
-      </div>
-      <button class="btn-ghost" id="btnSkipAd" disabled>Skip Ad</button>
-    </div>
-  </div>
 
   <!-- JS Modules -->
   <script src="js/crypto-js.min.js"></script>

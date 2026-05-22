@@ -326,7 +326,7 @@ async function runDiagnosis() {
       hide(DOM.loadingSection);
 
       if (!cancelled) {
-        showInterstitial();
+        showResults();
       } else {
         // Cancelled — restore analysis panel
         show(DOM.analysisPanel);
@@ -360,34 +360,7 @@ function showResults() {
   DOM.diagnosisBody.innerHTML = marked.parse(State.fullMarkdown);
 }
 
-/* ── Interstitial Ad ─────────────────────────────────────── */
-function showInterstitial() {
-  show(DOM.interstitialAd);
-  updateTitle('LOADING'); // Mantener sensación de espera
-  
-  let timeLeft = 5;
-  DOM.adCountdown.textContent = timeLeft;
-  DOM.btnSkipAd.textContent = `Skip Ad in ${timeLeft}s`;
-  DOM.btnSkipAd.disabled = true;
 
-  const timer = setInterval(() => {
-    timeLeft--;
-    if (timeLeft > 0) {
-      DOM.adCountdown.textContent = timeLeft;
-      DOM.btnSkipAd.textContent = `Skip Ad in ${timeLeft}s`;
-    } else {
-      clearInterval(timer);
-      DOM.adCountdown.textContent = '';
-      DOM.btnSkipAd.textContent = 'Skip Ad';
-      DOM.btnSkipAd.disabled = false;
-    }
-  }, 1000);
-}
-
-DOM.btnSkipAd.addEventListener('click', () => {
-  hide(DOM.interstitialAd);
-  showResults();
-});
 
 /* ── Cancel ──────────────────────────────────────────────── */
 DOM.btnCancelAnalysis.addEventListener('click', () => { GeminiAPI.cancel(); });
