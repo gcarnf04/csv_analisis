@@ -18,6 +18,7 @@
   <!-- CDN Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+  <script src="js/lang.js"></script>
 
   <link rel="stylesheet" href="css/style.css" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2977545376736575"
@@ -46,11 +47,15 @@
       </div>
 
       <div class="api-key-area" id="apiKeyArea">
+        <select class="lang-select btn-ghost btn-sm" style="margin-right:8px; background:var(--bg-2); border-color:var(--border-light); color:var(--text-1); font-size:12px; padding:4px 8px; border-radius:var(--radius-sm);">
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+        </select>
         <div class="api-key-status" id="apiKeyStatus">
           <span class="status-dot" id="statusDot"></span>
-          <span class="status-label" id="statusLabel">No API key</span>
+          <span class="status-label" id="statusLabel" data-en="No API key" data-es="Sin clave API">No API key</span>
         </div>
-        <button class="btn-ghost btn-sm" id="btnToggleApiKey">Set key</button>
+        <button class="btn-ghost btn-sm" id="btnToggleApiKey" data-en="Set key" data-es="Configurar clave">Set key</button>
       </div>
     </div>
   </header>

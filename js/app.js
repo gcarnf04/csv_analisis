@@ -76,29 +76,41 @@ const State = {
 function show(el) { if (el) el.hidden = false; }
 function hide(el) { if (el) el.hidden = true; }
 
+const langSelect = document.querySelector('.lang-select');
+if (langSelect) {
+  langSelect.value = Lang.get();
+  langSelect.addEventListener('change', (e) => {
+    Lang.set(e.target.value);
+  });
+}
+window.addEventListener('langchange', () => {
+  updateApiKeyUI();
+});
+
 function updateApiKeyUI() {
+  const lang = Lang.get();
   if (Vault.isUnlocked()) {
     State.apiKey = Vault.getUnlockedKey();
     DOM.statusDot.className = 'status-dot active';
-    DOM.statusLabel.textContent = 'API Key loaded';
-    DOM.btnToggleApiKey.textContent = 'Change key';
+    DOM.statusLabel.textContent = lang === 'es' ? 'Clave API cargada' : 'API Key loaded';
+    DOM.btnToggleApiKey.textContent = lang === 'es' ? 'Cambiar clave' : 'Change key';
     const canAnalyze = !!State.analysis;
     DOM.btnAnalyze.disabled = !canAnalyze;
-    DOM.ctaHint.textContent = 'Your key is unlocked for this session.';
+    DOM.ctaHint.textContent = lang === 'es' ? 'Tu clave está desbloqueada para esta sesión.' : 'Your key is unlocked for this session.';
   } else if (Vault.hasStoredKey()) {
     State.apiKey = '';
     DOM.statusDot.className = 'status-dot';
-    DOM.statusLabel.textContent = 'Key saved — enter PIN to activate';
-    DOM.btnToggleApiKey.textContent = 'Unlock';
+    DOM.statusLabel.textContent = lang === 'es' ? 'Clave guardada — introduce PIN para activar' : 'Key saved — enter PIN to activate';
+    DOM.btnToggleApiKey.textContent = lang === 'es' ? 'Desbloquear' : 'Unlock';
     DOM.btnAnalyze.disabled = true;
-    DOM.ctaHint.textContent = 'Unlock your key to enable AI diagnosis.';
+    DOM.ctaHint.textContent = lang === 'es' ? 'Desbloquea tu clave para permitir el diagnóstico IA.' : 'Unlock your key to enable AI diagnosis.';
   } else {
     State.apiKey = '';
     DOM.statusDot.className = 'status-dot error';
-    DOM.statusLabel.textContent = 'No API key';
-    DOM.btnToggleApiKey.textContent = 'Set key';
+    DOM.statusLabel.textContent = lang === 'es' ? 'Sin clave API' : 'No API key';
+    DOM.btnToggleApiKey.textContent = lang === 'es' ? 'Configurar clave' : 'Set key';
     DOM.btnAnalyze.disabled = true;
-    DOM.ctaHint.textContent = 'Set your Gemini API key to enable AI diagnosis.';
+    DOM.ctaHint.textContent = lang === 'es' ? 'Configura tu clave API de Gemini para permitir el diagnóstico IA.' : 'Set your Gemini API key to enable AI diagnosis.';
   }
 }
 
