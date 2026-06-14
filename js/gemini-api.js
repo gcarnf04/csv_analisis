@@ -70,72 +70,87 @@ ${verdictTitle}
   }
 
   let abortController = null;
-
   async function callWithStreaming(summary, apiKey, { onToken, onStatus, onDone, onError }) {
     abortController = new AbortController();
 
     const userContent = `Analyze this dataset metadata and produce the diagnostic report:\n\n\`\`\`json\n${JSON.stringify(summary, null, 2)}\n\`\`\``;
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
     const currentLang = typeof Lang !== 'undefined' ? Lang.get() : 'en';
 
-    try {
-      const connMsg = currentLang === 'es' ? 'Conectando con Gemini API…' : 'Connecting to Gemini API…';
-      onStatus(connMsg, 20);
-      const resp = await fetch(API_URL, {
-        method: 'POST',
-        signal: abortController.signal,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: getSystemPrompt(currentLang) }] },
-          contents: [{ parts: [{ text: userContent }] }],
-          generationConfig: { maxOutputTokens: MAX_TOKENS }
-        })
-      });
+    const models = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-3-flash', 'gemini-3.1-flash-lite'];
+    let lastError = null;
 
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        const msg = err?.error?.message || `HTTP ${resp.status}`;
-        onError(categorizeError(resp.status, msg));
+    for (const modelName of models) {
+      try {
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${apiKey}`;
+        const connMsg = currentLang === 'es' ? `Conectando con Gemini API (${modelName})…` : `Connecting to Gemini API (${modelName})…`;
+        onStatus(connMsg, 20);
+
+        const resp = await fetch(API_URL, {
+          method: 'POST',
+          signal: abortController.signal,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: getSystemPrompt(currentLang) }] },
+            contents: [{ parts: [{ text: userContent }] }],
+            generationConfig: { maxOutputTokens: MAX_TOKENS }
+          })
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          const msg = err?.error?.message || `HTTP ${resp.status}`;
+          lastError = new Error(categorizeError(resp.status, msg));
+          if (resp.status === 429) {
+            console.warn(`[Quota Exhausted] ${modelName} returned 429. Falling back...`);
+            continue;
+          }
+          throw lastError;
+        }
+
+        const streamMsg = currentLang === 'es' ? 'Generando diagnóstico…' : 'Streaming diagnosis…';
+        onStatus(streamMsg, 60);
+        const reader  = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let   buffer  = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const data = line.slice(6).trim();
+            if (!data || data === '[DONE]') continue;
+            try {
+              const json = JSON.parse(data);
+              const text = json?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              if (text) onToken(text);
+            } catch {}
+          }
+        }
+
+        onStatus('Done', 100);
+        onDone();
+        return; // Success, stop looping models
+
+      } catch (err) {
+        lastError = err;
+        if (err.name === 'AbortError') {
+          onDone(true); // cancelled
+          return;
+        }
+        if (err.message && (err.message.includes('429') || err.message.toLowerCase().includes('rate limit') || err.message.toLowerCase().includes('quota'))) {
+          continue; // Try next model
+        }
+        onError(`Error: ${err.message}`);
         return;
       }
-
-      const streamMsg = currentLang === 'es' ? 'Generando diagnóstico…' : 'Streaming diagnosis…';
-      onStatus(streamMsg, 60);
-      const reader  = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let   buffer  = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const data = line.slice(6).trim();
-          if (!data || data === '[DONE]') continue;
-          try {
-            const json = JSON.parse(data);
-            const text = json?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            if (text) onToken(text);
-          } catch {}
-        }
-      }
-
-      onStatus('Done', 100);
-      onDone();
-
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        onDone(true); // cancelled
-      } else {
-        onError(`Network error: ${err.message}`);
-      }
     }
+    onError(lastError?.message || "All fallback models exhausted due to rate limit/quota.");
   }
-
   function cancel() { abortController?.abort(); }
 
   /* ── Extract score from markdown text ────────────────── */
